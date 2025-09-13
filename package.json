@@ -30,7 +30,7 @@
     "@types/three": "^0.180.0",
     "typescript": "^5"
   },
-  "dependencies": {
+  "peerDependencies": {
     "pixi.js": "^8.13.2",
     "three": "^0.180.0"
   }
