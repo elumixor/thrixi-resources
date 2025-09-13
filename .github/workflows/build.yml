@@ -13,7 +13,6 @@ jobs:
       - run: bun run build
 
   test:
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +22,6 @@ jobs:
       - run: bun test
 
   lint:
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -33,7 +31,7 @@ jobs:
       - run: bun run check
 
   publish:
-    needs: [build]
+    needs: [build, test]
     runs-on: ubuntu-latest
 
     # Run on any tag
