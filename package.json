@@ -1,6 +1,6 @@
 {
   "name": "@elumixor/thrixi-resources",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Type safe resources loader for Three.js + PixiJS projects.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,7 @@
     "build": "bun run build:clean && bun run build:bundle && bun run build:declaration",
     "build:clean": "rm -rf ./dist",
     "build:bundle": "bun build ./src/index.ts --outdir ./dist",
-  "build:declaration": "tsc --project tsconfig.build.json",
+    "build:declaration": "tsc --project tsconfig.build.json",
     "check": "tsc --noEmit && bun run lint",
     "lint": "biome check . --fix",
     "format": "biome format . --write",
