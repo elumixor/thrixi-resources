@@ -24,6 +24,7 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
 
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": "./src",
   }
 }

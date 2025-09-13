@@ -12,9 +12,10 @@
     "./dist"
   ],
   "scripts": {
-    "build": "bun run build:bundle && bun run build:declaration",
+    "build": "bun run build:clean && bun run build:bundle && bun run build:declaration",
+    "build:clean": "rm -rf ./dist",
     "build:bundle": "bun build ./src/index.ts --outdir ./dist",
-    "build:declaration": "tsc --project tsconfig.json",
+  "build:declaration": "tsc --project tsconfig.build.json",
     "check": "tsc --noEmit && bun run lint",
     "lint": "biome check . --fix",
     "format": "biome format . --write",
