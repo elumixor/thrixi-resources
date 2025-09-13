@@ -1,0 +1,41 @@
+import type { Texture } from "pixi.js";
+import { Assets } from "pixi.js";
+import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+/**
+ * Base class for resource loaders
+ */
+export interface Loader<T extends GLTF | Texture = GLTF | Texture> {
+  load(path: string): Promise<T>;
+}
+
+/**
+ * Loader for 3D models (GLTF/GLB)
+ */
+export class ModelLoader implements Loader<GLTF> {
+  private readonly loader = new GLTFLoader();
+
+  load(path: string): Promise<GLTF> {
+    return new Promise((resolve, reject) => {
+      this.loader.load(
+        path,
+        (gltf) => resolve(gltf),
+        undefined,
+        (error) => reject(error),
+      );
+    });
+  }
+}
+
+/** Loader for 2D textures using Pixi.js Assets */
+export class TextureLoader implements Loader<Texture> {
+  load(path: string): Promise<Texture> {
+    return Assets.load(path);
+  }
+}
+
+export const loaders = {
+  model: new ModelLoader(),
+  texture: new TextureLoader(),
+} as const;

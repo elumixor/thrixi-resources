@@ -1,0 +1,37 @@
+{
+  "name": "@elumixor/thrixi-resources",
+  "version": "0.0.1",
+  "description": "Type safe resources loader for Three.js + PixiJS projects.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elumixor/thrixi-resources.git"
+  },
+  "files": [
+    "./dist"
+  ],
+  "scripts": {
+    "build": "bun run build:bundle && bun run build:declaration",
+    "build:bundle": "bun build ./src/index.ts --outdir ./dist",
+    "build:declaration": "tsc --project tsconfig.json",
+    "check": "tsc --noEmit && bun run lint",
+    "lint": "biome check . --fix",
+    "format": "biome format . --write",
+    "release:patch": "npm version patch -m \"Release v%s\" && git push --tags",
+    "release:minor": "npm version minor -m \"Release v%s\" && git push --tags",
+    "release:major": "npm version major -m \"Release v%s\" && git push --tags"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@types/bun": "^1.2.21",
+    "@types/three": "^0.180.0",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "pixi.js": "^8.13.2",
+    "three": "^0.180.0"
+  }
+}

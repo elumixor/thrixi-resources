@@ -1,0 +1,72 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "useExhaustiveDependencies": "off" // doesn't catch many cases and reports false positives
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noEmptyBlockStatements": "error",
+        "noUnknownAtRules": "off" // Tailwind CSS uses custom at-rules
+      },
+      "complexity": {
+        "noUselessCatch": "error"
+      },
+      "a11y": {
+        "useKeyWithClickEvents": "off"
+      },
+      "style": {
+        "useImportType": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useConsistentObjectDefinitions": {
+          "level": "warn",
+          "options": {
+            "syntax": "shorthand"
+          }
+        },
+        "useConsistentMemberAccessibility": {
+          "options": {
+            "accessibility": "noPublic"
+          }
+        },
+        "useReadonlyClassProperties": "warn",
+        "useGroupedAccessorPairs": "warn"
+      },
+      "nursery": {
+        "noFloatingPromises": "error",
+        "noUnnecessaryConditions": "error",
+        "useConsistentTypeDefinitions": {
+          "level": "warn",
+          "options": {
+            "style": "interface"
+          }
+        }
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {}
+    }
+  }
+}
