@@ -8,6 +8,7 @@ import {
   type LoadingProgress,
   type ResourceEntry,
   type SupportedFileName,
+  type TypeToResource,
 } from "./types";
 
 /**
@@ -15,6 +16,7 @@ import {
  */
 export class Resources<TResources extends Record<string, ResourceEntry> = Record<never, never>> {
   private readonly basePath: string;
+  private readonly events = new Map<string, Array<(resource: TypeToResource[keyof TypeToResource]) => void>>();
 
   constructor(
     basePath: string,
@@ -22,6 +24,26 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
   ) {
     // Normalize basePath: remove trailing slashes
     this.basePath = basePath.replace(/\/+$/, "");
+  }
+
+  onLoaded(name: string, callback: (resource: TypeToResource[keyof TypeToResource]) => void): void {
+    if (!this.events.has(name)) {
+      this.events.set(name, []);
+    }
+    const listeners = this.events.get(name);
+    if (listeners) {
+      listeners.push(callback);
+    }
+  }
+
+  private emitLoaded(name: string, resource: TypeToResource[keyof TypeToResource]): void {
+    const listeners = this.events.get(name);
+    if (listeners) {
+      for (const callback of listeners) {
+        callback(resource);
+      }
+      this.events.delete(name);
+    }
   }
 
   /**
@@ -44,14 +66,10 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
       loaded: false,
     };
 
-    const newResources = {
-      ...this.resources,
-      [name]: newEntry,
-    } as TResources & {
-      [K in GetFileName<T>]: ResourceEntry<T>;
-    };
+    // Update self
+    this.resources[name] = newEntry as unknown as TResources[GetFileName<T>];
 
-    return new Resources(this.basePath, newResources);
+    return this as unknown as Resources<TResources & { [K in GetFileName<T>]: ResourceEntry<T> }>;
   }
 
   /** Get list of all resource names */
@@ -78,6 +96,31 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
   }
 
   /**
+   * Get a promise that resolves to the resource once it's loaded
+   * @param name The resource name (e.g., 'rock', 'image')
+   * @returns A promise that resolves to the loaded resource object
+   */
+  getLazy<K extends keyof TResources>(
+    name: K,
+  ): Promise<TResources[K] extends ResourceEntry<infer T> ? GetResourceObject<T> : never> {
+    const entry = this.resources[name];
+
+    if (!entry) throw new Error(`Resource '${String(name)}' not found. Did you add it to the resources?`);
+
+    if (entry.loaded && entry.resource) {
+      return Promise.resolve(
+        entry.resource as TResources[K] extends ResourceEntry<infer T> ? GetResourceObject<T> : never,
+      );
+    }
+
+    return new Promise((resolve) => {
+      this.onLoaded(entry.name, (resource) => {
+        resolve(resource as TResources[K] extends ResourceEntry<infer T> ? GetResourceObject<T> : never);
+      });
+    });
+  }
+
+  /**
    * Load all added resources
    * @param onProgress Optional progress callback
    */
@@ -100,6 +143,8 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
 
           entry.resource = resource;
           entry.loaded = true;
+
+          this.emitLoaded(entry.name, resource);
 
           loaded++;
           updateProgress();
