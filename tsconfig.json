@@ -25,6 +25,6 @@
     "noPropertyAccessFromIndexSignature": false,
 
     "outDir": "./dist",
-    "baseUrl": "./src",
+    "baseUrl": "./src"
   }
 }

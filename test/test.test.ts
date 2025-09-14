@@ -4,52 +4,78 @@ import { join } from "node:path";
 import { Resources } from "../src";
 import { createTestServer, setUpProgressEventPolyfill } from "./test-utils";
 
-test("Resources loader loads a GLB model via HTTP server in Bun", async () => {
+// Setup helper
+async function setupTestServer() {
   setUpProgressEventPolyfill();
-
-  // Spin up a tiny static file server so that three's internal fetch(Request) works
   const assetsDir = join(process.cwd(), "test", "assets");
-
-  // Basic sanity: assets directory contains portal.glb
   const files = await readdir(assetsDir);
   expect(files).toContain("portal.glb");
-
   const server = await createTestServer(assetsDir);
-
   const baseURL = `http://localhost:${server.port}`;
+  return { server, baseURL, assetsDir };
+}
+
+test("Resources basic functionality", async () => {
+  const { server, baseURL } = await setupTestServer();
 
   const empty = new Resources(baseURL);
 
+  // Test missing resource error
   expect(() => {
     // @ts-expect-error missing not added
     empty.get("missing");
   }).toThrowError("Resource 'missing' not found. Did you add it to the resources?");
 
-  const withModel = empty.add("portal.glb");
-
+  // Test unsupported extension error
   expect(() => {
     // @ts-expect-error unsupported extension
-    withModel.add("invalid.txt");
+    empty.add("invalid.txt");
   }).toThrowError("Unsupported file extension: .txt");
 
+  // Test adding and getting before load
+  const withModel = empty.add("portal.glb");
   expect(() => {
     withModel.get("portal");
   }).toThrowError("Resource 'portal' not loaded yet. Call load() first.");
 
+  // Test loading and getting
   await expect(withModel.load()).resolves.toBeUndefined();
-
   const gltf = withModel.get("portal");
   expect(gltf).toBeDefined();
 
   server.stop();
 });
 
-test("getLazy returns a promise that resolves to the resource", async () => {
-  setUpProgressEventPolyfill();
+test("Resources supports both chaining and separate add calls", async () => {
+  const { server, baseURL } = await setupTestServer();
 
-  const assetsDir = join(process.cwd(), "test", "assets");
-  const server = await createTestServer(assetsDir);
-  const baseURL = `http://localhost:${server.port}`;
+  // Test chaining
+  const chained = new Resources(baseURL).add("portal.glb");
+
+  expect(chained.names).toContain("portal");
+  expect(chained.names).toHaveLength(1);
+
+  // Test separate calls on same instance
+  let separate = new Resources(baseURL);
+  separate = separate.add("portal.glb") as unknown as typeof separate;
+
+  expect(separate.names).toContain("portal");
+  expect(separate.names).toHaveLength(1);
+
+  // Both should work identically
+  await expect(chained.load()).resolves.toBeUndefined();
+  await expect(separate.load()).resolves.toBeUndefined();
+
+  const chainedGltf = chained.get("portal");
+  const separateGltf = (separate as unknown as typeof chained).get("portal");
+  expect(chainedGltf).toBeDefined();
+  expect(separateGltf).toBeDefined();
+
+  server.stop();
+});
+
+test("getLazy returns a promise that resolves to the resource", async () => {
+  const { server, baseURL } = await setupTestServer();
 
   const resources = new Resources(baseURL).add("portal.glb");
 
@@ -68,11 +94,7 @@ test("getLazy returns a promise that resolves to the resource", async () => {
 });
 
 test("getLazy resolves immediately if resource is already loaded", async () => {
-  setUpProgressEventPolyfill();
-
-  const assetsDir = join(process.cwd(), "test", "assets");
-  const server = await createTestServer(assetsDir);
-  const baseURL = `http://localhost:${server.port}`;
+  const { server, baseURL } = await setupTestServer();
 
   const resources = new Resources(baseURL).add("portal.glb");
 

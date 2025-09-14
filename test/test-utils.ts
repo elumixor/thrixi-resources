@@ -31,4 +31,24 @@ export function setUpProgressEventPolyfill() {
     }
     (globalThis as unknown as { ProgressEvent: typeof ProgressEventPolyfill }).ProgressEvent = ProgressEventPolyfill;
   }
+
+  // Polyfill document for Pixi.js under Bun
+  if (typeof (globalThis as unknown as { document: unknown }).document === "undefined") {
+    const documentPolyfill = {
+      createElement: (tagName: string) => {
+        if (tagName === "video" || tagName === "img") {
+          return {
+            src: "",
+            load: () => void 0,
+            play: () => Promise.resolve(),
+            pause: () => void 0,
+            addEventListener: () => void 0,
+            removeEventListener: () => void 0,
+          };
+        }
+        return {};
+      },
+    };
+    (globalThis as unknown as { document: typeof documentPolyfill }).document = documentPolyfill;
+  }
 }
