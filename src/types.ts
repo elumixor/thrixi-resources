@@ -31,7 +31,7 @@ export interface TypeToResource {
 }
 
 /** Extract filename without extension. block.png -> block */
-export type GetFileName<T extends SupportedFileName> = T extends `${infer Name}.${string}` ? Name : T;
+export type RemoveExtension<T extends SupportedFileName> = T extends `${infer Name}.${string}` ? Name : T;
 /** Extract file extension from filename. block.png -> png */
 export type GetExtension<T extends SupportedFileName> = T extends `${string}.${infer Ext}` ? Ext : never;
 
@@ -54,7 +54,7 @@ export type GetResourceObject<T extends SupportedFileName> = GetResourceType<T> 
  */
 export interface ResourceEntry<T extends SupportedFileName = SupportedFileName> {
   filename: T;
-  name: GetFileName<T>;
+  name: RemoveExtension<T>;
   type: GetResourceType<T>;
   resource?: GetResourceObject<T>;
   path: string;

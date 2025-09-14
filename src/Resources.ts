@@ -2,10 +2,10 @@ import { type Loader, loaders } from "./loaders";
 import {
   extensionMap,
   type GetExtension,
-  type GetFileName,
   type GetResourceObject,
   type GetResourceType,
   type LoadingProgress,
+  type RemoveExtension,
   type ResourceEntry,
   type SupportedFileName,
   type TypeToResource,
@@ -51,9 +51,11 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
    * @param filename The filename with extension (e.g., 'portal.glb', 'image.png')
    * @returns A new Resources instance with the added resource
    */
-  add<T extends SupportedFileName>(filename: T): Resources<TResources & { [K in GetFileName<T>]: ResourceEntry<T> }> {
+  add<T extends SupportedFileName>(
+    filename: T,
+  ): Resources<TResources & { [K in RemoveExtension<T>]: ResourceEntry<T> }> {
     const dotIndex = filename.lastIndexOf(".");
-    const name = (dotIndex > 0 ? filename.substring(0, dotIndex) : filename) as GetFileName<T>;
+    const name = (dotIndex > 0 ? filename.substring(0, dotIndex) : filename) as RemoveExtension<T>;
     const extension = filename.substring(filename.lastIndexOf(".") + 1) as GetExtension<T>;
     const type = extensionMap[extension] as GetResourceType<T>;
     if (!type) throw new Error(`Unsupported file extension: .${extension}`);
@@ -67,9 +69,9 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     };
 
     // Update self
-    this.resources[name] = newEntry as unknown as TResources[GetFileName<T>];
+    this.resources[name] = newEntry as unknown as TResources[RemoveExtension<T>];
 
-    return this as unknown as Resources<TResources & { [K in GetFileName<T>]: ResourceEntry<T> }>;
+    return this as unknown as Resources<TResources & { [K in RemoveExtension<T>]: ResourceEntry<T> }>;
   }
 
   /** Get list of all resource names */
