@@ -3,7 +3,7 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { Texture } from "pixi.js";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
-import { Resources } from "../src";
+import { type LoadingProgress, Resources } from "../src";
 import { createTestServer, setUpProgressEventPolyfill } from "./test-utils";
 
 // Setup helper
@@ -44,6 +44,23 @@ test("Resources basic functionality", async () => {
   await expect(withModel.load()).resolves.toBeUndefined();
   const gltf = withModel.get("portal");
   expect(gltf).toBeDefined();
+
+  server.stop();
+});
+
+test("load() fires progress events", async () => {
+  const { server, baseURL } = await setupTestServer();
+
+  const resources = new Resources(baseURL).add("portal.glb");
+
+  const progressEvents: LoadingProgress[] = [];
+  await resources.load((event) => progressEvents.push(event));
+
+  expect(progressEvents.length).toBeGreaterThan(0);
+  const last = progressEvents[progressEvents.length - 1];
+  expect(last.loaded).toBe(1);
+  expect(last.current).toBeDefined();
+  expect(last.current.name).toBe("portal");
 
   server.stop();
 });
