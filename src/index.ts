@@ -1,4 +1,4 @@
-export { Resources } from "./resources";
+export { Resources } from "./resources_stuff";
 export type {
   ExtensionToType,
   GetExtension,
