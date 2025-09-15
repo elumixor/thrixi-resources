@@ -1,4 +1,4 @@
-import type { Texture } from "pixi.js";
+import type { Texture as PixiTexture } from "pixi.js";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 
 /** Map file extensions to resource types */
@@ -27,7 +27,7 @@ export type SupportedFileName = `${string}.${Extension}`;
  */
 export interface TypeToResource {
   model: GLTF;
-  texture: Texture;
+  texture: PixiTexture;
 }
 
 /** Extract filename without extension. block.png -> block */
@@ -68,4 +68,5 @@ export interface LoadingProgress {
   total: number;
   loaded: number;
   percentage: number;
+  current: { name: string; resource: GLTF | PixiTexture };
 }

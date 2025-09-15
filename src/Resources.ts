@@ -1,3 +1,5 @@
+import type { Texture as PixiTexture } from "pixi.js";
+import type { GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { type Loader, loaders } from "./loaders";
 import {
   extensionMap,
@@ -131,11 +133,14 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     const total = entries.length;
     let loaded = 0;
 
-    const updateProgress = () => {
-      onProgress?.({ total, loaded, percentage: total > 0 ? (loaded / total) * 100 : 100 });
+    const updateProgress = (entryName: string, resource: GLTF | PixiTexture) => {
+      onProgress?.({
+        total,
+        loaded,
+        percentage: total > 0 ? (loaded / total) * 100 : 100,
+        current: { name: entryName, resource },
+      });
     };
-
-    updateProgress();
 
     await Promise.all(
       entries.map(async (entry) => {
@@ -149,7 +154,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
           this.emitLoaded(entry.name, resource);
 
           loaded++;
-          updateProgress();
+          updateProgress(entry.name, resource);
           return resource;
         } catch (error) {
           console.error(`Error loading resource '${entry.filename}':`, error);
@@ -169,7 +174,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
   /**
    * Get loading progress information
    */
-  get progress(): LoadingProgress {
+  get progress() {
     const entries = Object.values(this.resources);
     const total = entries.length;
     const loaded = entries.filter((entry) => entry.loaded).length;
