@@ -1,17 +1,18 @@
 import type { Texture as PixiTexture } from "pixi.js";
-import type { DataTexture } from "three";
+import type { DataTexture, Texture as ThreeTexture } from "three";
 import type { GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { type Loader, loaders } from "./loaders";
+import { type Loader, loaders, threeLoaders } from "./loaders";
 import {
+  type Engine,
   extensionMap,
   type GetExtension,
   type GetResourceObject,
+  type GetResourceObjectByEngine,
   type GetResourceType,
   type LoadingProgress,
   type RemoveExtension,
   type ResourceEntry,
   type SupportedFileName,
-  type TypeToResource,
 } from "./types";
 
 /**
@@ -19,7 +20,10 @@ import {
  */
 export class Resources<TResources extends Record<string, ResourceEntry> = Record<never, never>> {
   private readonly basePath: string;
-  private readonly events = new Map<string, Array<(resource: TypeToResource[keyof TypeToResource]) => void>>();
+  private readonly events = new Map<
+    string,
+    Array<(resource: GLTF | PixiTexture | DataTexture | ThreeTexture) => void>
+  >();
 
   constructor(
     basePath: string,
@@ -29,7 +33,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     this.basePath = basePath.replace(/\/+$/, "");
   }
 
-  onLoaded(name: string, callback: (resource: TypeToResource[keyof TypeToResource]) => void): void {
+  onLoaded(name: string, callback: (resource: GLTF | PixiTexture | DataTexture | ThreeTexture) => void): void {
     if (!this.events.has(name)) {
       this.events.set(name, []);
     }
@@ -39,7 +43,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     }
   }
 
-  private emitLoaded(name: string, resource: TypeToResource[keyof TypeToResource]): void {
+  private emitLoaded(name: string, resource: GLTF | PixiTexture | DataTexture | ThreeTexture): void {
     const listeners = this.events.get(name);
     if (listeners) {
       for (const callback of listeners) {
@@ -52,21 +56,24 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
   /**
    * Add a resource to be loaded
    * @param filename The filename with extension (e.g., 'portal.glb', 'image.png')
+   * @param engine The engine to use for loading (defaults to 'pixi' for textures)
    * @returns A new Resources instance with the added resource
    */
-  add<T extends SupportedFileName>(
+  add<T extends SupportedFileName, E extends Engine = "pixi">(
     filename: T,
-  ): Resources<TResources & { [K in RemoveExtension<T>]: ResourceEntry<T> }> {
+    engine: E = "pixi" as E,
+  ): Resources<TResources & { [K in RemoveExtension<T>]: ResourceEntry<T, E> }> {
     const dotIndex = filename.lastIndexOf(".");
     const name = (dotIndex > 0 ? filename.substring(0, dotIndex) : filename) as RemoveExtension<T>;
     const extension = filename.substring(filename.lastIndexOf(".") + 1) as GetExtension<T>;
     const type = extensionMap[extension] as GetResourceType<T>;
     if (!type) throw new Error(`Unsupported file extension: .${extension}`);
 
-    const newEntry: ResourceEntry<T> = {
+    const newEntry: ResourceEntry<T, E> = {
       name,
       filename,
       type,
+      engine,
       path: `${this.basePath}/${filename}`,
       loaded: false,
     };
@@ -74,7 +81,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     // Update self
     this.resources[name] = newEntry as unknown as TResources[RemoveExtension<T>];
 
-    return this as unknown as Resources<TResources & { [K in RemoveExtension<T>]: ResourceEntry<T> }>;
+    return this as unknown as Resources<TResources & { [K in RemoveExtension<T>]: ResourceEntry<T, E> }>;
   }
 
   /** Get list of all resource names */
@@ -89,7 +96,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
    */
   get<K extends keyof TResources>(
     name: K,
-  ): TResources[K] extends ResourceEntry<infer T> ? GetResourceObject<T> : never {
+  ): TResources[K] extends ResourceEntry<infer T, infer E> ? GetResourceObjectByEngine<T, E> : never {
     const entry = this.resources[name];
 
     if (!entry) throw new Error(`Resource '${String(name)}' not found. Did you add it to the resources?`);
@@ -97,7 +104,9 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     if (!entry.loaded || !entry.resource)
       throw new Error(`Resource '${String(name)}' not loaded yet. Call load() first.`);
 
-    return entry.resource as TResources[K] extends ResourceEntry<infer T> ? GetResourceObject<T> : never;
+    return entry.resource as TResources[K] extends ResourceEntry<infer T, infer E>
+      ? GetResourceObjectByEngine<T, E>
+      : never;
   }
 
   /**
@@ -107,20 +116,24 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
    */
   getLazy<K extends keyof TResources>(
     name: K,
-  ): Promise<TResources[K] extends ResourceEntry<infer T> ? GetResourceObject<T> : never> {
+  ): Promise<TResources[K] extends ResourceEntry<infer T, infer E> ? GetResourceObjectByEngine<T, E> : never> {
     const entry = this.resources[name];
 
     if (!entry) throw new Error(`Resource '${String(name)}' not found. Did you add it to the resources?`);
 
     if (entry.loaded && entry.resource) {
       return Promise.resolve(
-        entry.resource as TResources[K] extends ResourceEntry<infer T> ? GetResourceObject<T> : never,
+        entry.resource as TResources[K] extends ResourceEntry<infer T, infer E>
+          ? GetResourceObjectByEngine<T, E>
+          : never,
       );
     }
 
     return new Promise((resolve) => {
       this.onLoaded(entry.name, (resource) => {
-        resolve(resource as TResources[K] extends ResourceEntry<infer T> ? GetResourceObject<T> : never);
+        resolve(
+          resource as TResources[K] extends ResourceEntry<infer T, infer E> ? GetResourceObjectByEngine<T, E> : never,
+        );
       });
     });
   }
@@ -134,7 +147,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     const total = entries.length;
     let loaded = 0;
 
-    const updateProgress = (entryName: string, resource: GLTF | PixiTexture | DataTexture) => {
+    const updateProgress = (entryName: string, resource: GLTF | PixiTexture | DataTexture | ThreeTexture) => {
       onProgress?.({
         total,
         loaded,
@@ -146,10 +159,13 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     await Promise.all(
       entries.map(async (entry) => {
         try {
-          const loader = loaders[entry.type] as Loader;
+          // Select the appropriate loader based on engine
+          const engine = entry.engine as Engine;
+          const loaderSet = engine === "three" ? threeLoaders : loaders;
+          const loader = loaderSet[entry.type] as Loader;
           const resource = await loader.load(entry.path);
 
-          entry.resource = resource;
+          entry.resource = resource as GetResourceObject<typeof entry.filename>;
           entry.loaded = true;
 
           this.emitLoaded(entry.name, resource);

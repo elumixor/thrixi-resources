@@ -1,5 +1,5 @@
 import type { Texture as PixiTexture } from "pixi.js";
-import type { DataTexture } from "three";
+import type { DataTexture, Texture as ThreeTexture } from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 
 /** Map file extensions to resource types */
@@ -33,6 +33,30 @@ export interface TypeToResource {
   environment: DataTexture;
 }
 
+/**
+ * Engine-specific resource type mapping
+ */
+export interface EngineToResourceType {
+  pixi: {
+    model: GLTF;
+    texture: PixiTexture;
+    environment: DataTexture;
+  };
+  three: {
+    model: GLTF;
+    texture: ThreeTexture;
+    environment: DataTexture;
+  };
+}
+
+/**
+ * Get the resource object type based on filename and engine
+ */
+export type GetResourceObjectByEngine<
+  T extends SupportedFileName,
+  E extends Engine = "pixi",
+> = GetResourceType<T> extends keyof EngineToResourceType[E] ? EngineToResourceType[E][GetResourceType<T>] : never;
+
 /** Extract filename without extension. block.png -> block */
 export type RemoveExtension<T extends SupportedFileName> = T extends `${infer Name}.${string}` ? Name : T;
 /** Extract file extension from filename. block.png -> png */
@@ -53,13 +77,19 @@ export type GetResourceObject<T extends SupportedFileName> = GetResourceType<T> 
   : never;
 
 /**
+ * Supported engines for resource loading
+ */
+export type Engine = "three" | "pixi";
+
+/**
  * Resource entry with metadata
  */
-export interface ResourceEntry<T extends SupportedFileName = SupportedFileName> {
+export interface ResourceEntry<T extends SupportedFileName = SupportedFileName, E extends Engine = "pixi"> {
   filename: T;
   name: RemoveExtension<T>;
   type: GetResourceType<T>;
-  resource?: GetResourceObject<T>;
+  engine: E;
+  resource?: GetResourceObjectByEngine<T, E>;
   path: string;
   loaded: boolean;
 }
@@ -71,5 +101,5 @@ export interface LoadingProgress {
   total: number;
   loaded: number;
   percentage: number;
-  current: { name: string; resource: GLTF | PixiTexture | DataTexture };
+  current: { name: string; resource: GLTF | PixiTexture | DataTexture | ThreeTexture };
 }

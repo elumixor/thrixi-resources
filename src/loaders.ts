@@ -1,6 +1,7 @@
 import type { Texture } from "pixi.js";
 import { Assets } from "pixi.js";
-import type { DataTexture } from "three";
+import type { DataTexture, Texture as ThreeTexture } from "three";
+import { TextureLoader as ThreeTextureLoaderCore } from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
@@ -8,7 +9,9 @@ import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 /**
  * Base class for resource loaders
  */
-export interface Loader<T extends GLTF | Texture | DataTexture = GLTF | Texture | DataTexture> {
+export interface Loader<
+  T extends GLTF | Texture | DataTexture | ThreeTexture = GLTF | Texture | DataTexture | ThreeTexture,
+> {
   load(path: string): Promise<T>;
 }
 
@@ -37,19 +40,35 @@ export class TextureLoader implements Loader<Texture> {
   }
 }
 
+/** Loader for 2D textures using Three.js TextureLoader */
+export class ThreeTextureLoader implements Loader<ThreeTexture> {
+  private readonly loader = new ThreeTextureLoaderCore();
+
+  load(path: string): Promise<ThreeTexture> {
+    return new Promise((resolve, reject) => {
+      this.loader.load(
+        path,
+        (loadedTexture: ThreeTexture) => resolve(loadedTexture),
+        undefined,
+        (error: unknown) => reject(error),
+      );
+    });
+  }
+}
+
 /**
- * Loader for HDR environment maps using RGBELoader
+ * Loader for HDR environment maps using HDRLoader
  */
 export class EnvironmentLoader implements Loader<DataTexture> {
   private readonly loader = new HDRLoader();
 
   load(path: string): Promise<DataTexture> {
-    return new Promise<DataTexture>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.loader.load(
         path,
-        (texture) => resolve(texture),
+        (texture: DataTexture) => resolve(texture),
         undefined,
-        (error) => reject(error),
+        (error: unknown) => reject(error),
       );
     });
   }
@@ -58,5 +77,11 @@ export class EnvironmentLoader implements Loader<DataTexture> {
 export const loaders = {
   model: new ModelLoader(),
   texture: new TextureLoader(),
+  environment: new EnvironmentLoader(),
+} as const;
+
+export const threeLoaders = {
+  model: new ModelLoader(),
+  texture: new ThreeTextureLoader(),
   environment: new EnvironmentLoader(),
 } as const;
