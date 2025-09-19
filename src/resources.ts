@@ -1,4 +1,5 @@
 import type { Texture as PixiTexture } from "pixi.js";
+import type { DataTexture } from "three";
 import type { GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { type Loader, loaders } from "./loaders";
 import {
@@ -133,7 +134,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     const total = entries.length;
     let loaded = 0;
 
-    const updateProgress = (entryName: string, resource: GLTF | PixiTexture) => {
+    const updateProgress = (entryName: string, resource: GLTF | PixiTexture | DataTexture) => {
       onProgress?.({
         total,
         loaded,

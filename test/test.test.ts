@@ -230,3 +230,23 @@ test("Multiple resource types can be loaded and validated together", async () =>
 
   server.stop();
 });
+
+test("HDR environment map support", async () => {
+  const { server, baseURL } = await setupTestServer();
+
+  const resources = new Resources(baseURL);
+
+  // Test that HDR extension is supported (no error should be thrown)
+  expect(() => {
+    resources.add("environment.hdr");
+  }).not.toThrow();
+
+  // Test that the resource is added with correct name and type
+  const withHDR = resources.add("environment.hdr");
+  expect(withHDR.names).toContain("environment");
+
+  // Note: Loading test would require an actual HDR file
+  // For now we just verify the extension is recognized and can be added
+
+  server.stop();
+});

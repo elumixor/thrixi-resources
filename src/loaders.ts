@@ -1,12 +1,14 @@
 import type { Texture } from "pixi.js";
 import { Assets } from "pixi.js";
+import type { DataTexture } from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 
 /**
  * Base class for resource loaders
  */
-export interface Loader<T extends GLTF | Texture = GLTF | Texture> {
+export interface Loader<T extends GLTF | Texture | DataTexture = GLTF | Texture | DataTexture> {
   load(path: string): Promise<T>;
 }
 
@@ -35,7 +37,26 @@ export class TextureLoader implements Loader<Texture> {
   }
 }
 
+/**
+ * Loader for HDR environment maps using RGBELoader
+ */
+export class EnvironmentLoader implements Loader<DataTexture> {
+  private readonly loader = new HDRLoader();
+
+  load(path: string): Promise<DataTexture> {
+    return new Promise<DataTexture>((resolve, reject) => {
+      this.loader.load(
+        path,
+        (texture) => resolve(texture),
+        undefined,
+        (error) => reject(error),
+      );
+    });
+  }
+}
+
 export const loaders = {
   model: new ModelLoader(),
   texture: new TextureLoader(),
+  environment: new EnvironmentLoader(),
 } as const;
