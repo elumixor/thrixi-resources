@@ -303,9 +303,6 @@ test("Engine-specific texture loading returns correct types", async () => {
     // PixiJS Texture has these properties
     expect(pixiTexture).toBeInstanceOf(PixiTexture);
     expect(threeTexture).toBeInstanceOf(ThreeTexture);
-
-    // Verify the objects are different types
-    expect(pixiTexture).not.toBe(threeTexture);
   } catch (error) {
     // If texture loading fails due to environment limitations, log but don't fail
     console.warn("Texture loading test skipped due to environment limitations:", error);
