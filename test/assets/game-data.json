@@ -1,0 +1,24 @@
+{
+  "levels": [
+    {
+      "id": 1,
+      "name": "Tutorial",
+      "difficulty": "easy",
+      "enemies": [{ "type": "goblin", "health": 10 }, { "type": "orc", "health": 20 }]
+    },
+    {
+      "id": 2,
+      "name": "Forest",
+      "difficulty": "medium",
+      "enemies": [{ "type": "wolf", "health": 15 }, { "type": "bear", "health": 30 }]
+    }
+  ],
+  "player": {
+    "name": "Hero",
+    "stats": {
+      "health": 100,
+      "mana": 50,
+      "inventory": ["sword", "shield", "potion"]
+    }
+  }
+}

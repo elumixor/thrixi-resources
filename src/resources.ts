@@ -9,6 +9,7 @@ import {
   type GetResourceObject,
   type GetResourceObjectByEngine,
   type GetResourceType,
+  type JsonValue,
   type LoadingProgress,
   type RemoveExtension,
   type ResourceEntry,
@@ -22,7 +23,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
   private readonly basePath: string;
   private readonly events = new Map<
     string,
-    Array<(resource: GLTF | PixiTexture | DataTexture | ThreeTexture) => void>
+    Array<(resource: GLTF | PixiTexture | DataTexture | ThreeTexture | JsonValue) => void>
   >();
 
   constructor(
@@ -33,7 +34,10 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     this.basePath = basePath.replace(/\/+$/, "");
   }
 
-  onLoaded(name: string, callback: (resource: GLTF | PixiTexture | DataTexture | ThreeTexture) => void): void {
+  onLoaded(
+    name: string,
+    callback: (resource: GLTF | PixiTexture | DataTexture | ThreeTexture | JsonValue) => void,
+  ): void {
     if (!this.events.has(name)) {
       this.events.set(name, []);
     }
@@ -43,7 +47,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     }
   }
 
-  private emitLoaded(name: string, resource: GLTF | PixiTexture | DataTexture | ThreeTexture): void {
+  private emitLoaded(name: string, resource: GLTF | PixiTexture | DataTexture | ThreeTexture | JsonValue): void {
     const listeners = this.events.get(name);
     if (listeners) {
       for (const callback of listeners) {
@@ -147,7 +151,10 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
     const total = entries.length;
     let loaded = 0;
 
-    const updateProgress = (entryName: string, resource: GLTF | PixiTexture | DataTexture | ThreeTexture) => {
+    const updateProgress = (
+      entryName: string,
+      resource: GLTF | PixiTexture | DataTexture | ThreeTexture | JsonValue,
+    ) => {
       onProgress?.({
         total,
         loaded,

@@ -1,0 +1,38 @@
+{
+  "name": "config",
+  "version": "1.0.0",
+  "settings": {
+    "theme": "dark",
+    "language": "en",
+    "features": {
+      "animations": true,
+      "sounds": false,
+      "notifications": {
+        "email": true,
+        "push": false
+      }
+    }
+  },
+  "items": [
+    "item1",
+    "item2",
+    {
+      "id": 3,
+      "name": "special item",
+      "properties": {
+        "color": "red",
+        "size": 42
+      }
+    }
+  ],
+  "metadata": {
+    "created": "2023-01-01",
+    "tags": ["config", "settings"],
+    "nested": {
+      "deep": {
+        "value": null,
+        "array": [1, 2, [3, 4, 5]]
+      }
+    }
+  }
+}

@@ -11,13 +11,14 @@ export const extensionMap = {
   jpeg: "texture",
   webp: "texture",
   hdr: "environment",
+  json: "json",
 } as const;
+
+/** Recursive JSON value type */
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 /** Map file extensions to resource types */
 export type ExtensionToType = typeof extensionMap;
-/**
- * Supported resource types based on file extensions
- */
 export type ResourceType = ExtensionToType[keyof ExtensionToType];
 //           ^?
 export type Extension = keyof ExtensionToType;
@@ -31,6 +32,7 @@ export interface TypeToResource {
   model: GLTF;
   texture: PixiTexture;
   environment: DataTexture;
+  json: JsonValue;
 }
 
 /**
@@ -41,11 +43,13 @@ export interface EngineToResourceType {
     model: GLTF;
     texture: PixiTexture;
     environment: DataTexture;
+    json: JsonValue;
   };
   three: {
     model: GLTF;
     texture: ThreeTexture;
     environment: DataTexture;
+    json: JsonValue;
   };
 }
 
@@ -101,5 +105,5 @@ export interface LoadingProgress {
   total: number;
   loaded: number;
   percentage: number;
-  current: { name: string; resource: GLTF | PixiTexture | DataTexture | ThreeTexture };
+  current: { name: string; resource: GLTF | PixiTexture | DataTexture | ThreeTexture | JsonValue };
 }

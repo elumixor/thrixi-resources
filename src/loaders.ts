@@ -5,12 +5,18 @@ import { TextureLoader as ThreeTextureLoaderCore } from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
+import type { JsonValue } from "./types";
 
 /**
  * Base class for resource loaders
  */
 export interface Loader<
-  T extends GLTF | Texture | DataTexture | ThreeTexture = GLTF | Texture | DataTexture | ThreeTexture,
+  T extends GLTF | Texture | DataTexture | ThreeTexture | JsonValue =
+    | GLTF
+    | Texture
+    | DataTexture
+    | ThreeTexture
+    | JsonValue,
 > {
   load(path: string): Promise<T>;
 }
@@ -74,14 +80,23 @@ export class EnvironmentLoader implements Loader<DataTexture> {
   }
 }
 
+/** Loader for JSON files using Pixi.js Assets */
+export class JsonLoader implements Loader<JsonValue> {
+  load(path: string): Promise<JsonValue> {
+    return Assets.load(path);
+  }
+}
+
 export const loaders = {
   model: new ModelLoader(),
   texture: new TextureLoader(),
   environment: new EnvironmentLoader(),
+  json: new JsonLoader(),
 } as const;
 
 export const threeLoaders = {
   model: new ModelLoader(),
   texture: new ThreeTextureLoader(),
   environment: new EnvironmentLoader(),
+  json: new JsonLoader(),
 } as const;

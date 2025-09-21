@@ -6,6 +6,7 @@ export type {
   GetResourceObject,
   GetResourceObjectByEngine,
   GetResourceType,
+  JsonValue,
   LoadingProgress,
   RemoveExtension,
   ResourceEntry,
