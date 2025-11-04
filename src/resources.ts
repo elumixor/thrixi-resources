@@ -16,7 +16,9 @@ import {
   type SupportedFileName,
 } from "./types";
 
-/** Type-safe resource management system with fluent API */
+/**
+ * Type-safe resource management system with fluent API
+ */
 export class Resources<TResources extends Record<string, ResourceEntry> = Record<never, never>> {
   private readonly basePath: string;
   private readonly events = new Map<
@@ -98,7 +100,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
    */
   get<K extends keyof TResources>(
     name: K,
-  ): TResources[K] extends ResourceEntry<infer T, infer E> ? GetResourceObjectByEngine<T, E> : unknown {
+  ): TResources[K] extends ResourceEntry<infer T, infer E> ? GetResourceObjectByEngine<T, E> : never {
     const entry = this.resources[name];
 
     if (!entry) throw new Error(`Resource '${String(name)}' not found. Did you add it to the resources?`);
@@ -118,7 +120,7 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
    */
   getLazy<K extends keyof TResources>(
     name: K,
-  ): Promise<TResources[K] extends ResourceEntry<infer T, infer E> ? GetResourceObjectByEngine<T, E> : unknown> {
+  ): Promise<TResources[K] extends ResourceEntry<infer T, infer E> ? GetResourceObjectByEngine<T, E> : never> {
     const entry = this.resources[name];
 
     if (!entry) throw new Error(`Resource '${String(name)}' not found. Did you add it to the resources?`);
