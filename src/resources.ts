@@ -207,4 +207,13 @@ export class Resources<TResources extends Record<string, ResourceEntry> = Record
       percentage: total > 0 ? (loaded / total) * 100 : 100,
     };
   }
+
+  /**
+   * Clear all loaded resources
+   * Resets the loaded state and removes resource objects from memory
+   */
+  clear(): void {
+    for (const key of Object.keys(this.resources)) delete this.resources[key];
+    this.events.clear();
+  }
 }
